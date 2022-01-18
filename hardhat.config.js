@@ -13,7 +13,7 @@ module.exports = {
 		settings: {
 			optimizer: {
 				enabled: true,
-				runs: 1000,
+				runs: 800,
 			},
 		},
 	},
@@ -29,6 +29,10 @@ module.exports = {
 			allowUnlimitedContractSize: false,
 			throwOnTransactionFailures: false,
 			throwOnCallFailures: true,
+			initialBaseFeePerGas: 0,
+			accounts: {
+				count: 35,
+			},
 		},
 		ganache: {
 			url: "http://127.0.0.1:7545",
@@ -83,12 +87,6 @@ module.exports = {
 			timeout: 25000,
 			accounts: [process.env.PRIVATE_KEY],
 		},
-	},
-	dependencyCompiler: {
-		paths: [
-			// ERC1967 is used to deploy upgradeable contracts
-			"@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol",
-		],
 	},
 	gasReporter: {
 		enabled: !!process.env.REPORT_GAS === true,

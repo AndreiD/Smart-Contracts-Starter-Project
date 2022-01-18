@@ -2,6 +2,20 @@ const { ethers, upgrades } = require("hardhat")
 require("@nomiclabs/hardhat-web3")
 const fs = require("fs-extra")
 
+function sleep(ms) {
+	return new Promise((resolve) => {
+		setTimeout(resolve, ms)
+	})
+}
+
+async function getImplementationAddress(proxyAddress) {
+	const implHex = await ethers.provider.getStorageAt(
+		proxyAddress,
+		"0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc"
+	)
+	return ethers.utils.hexStripZeros(implHex)
+}
+
 async function main() {
 	fs.removeSync("cache")
 	fs.removeSync("artifacts")
@@ -18,19 +32,33 @@ async function main() {
 	const balance = await web3.eth.getBalance(account)
 
 	console.log(
-		"Upgrader Account " + deployerAddress + " has balance: " + web3.utils.fromWei(balance, "ether"),
+		"Deployer Account " + deployerAddress + " has balance: " + web3.utils.fromWei(balance, "ether"),
 		"ETH"
 	)
 
 	// We get the contract to deploy
-	const BOX_ADDRESS = "0xDD266b153B2E36ebB62758C59b327EED3Ad006E5"
-	const BoxV2 = await ethers.getContractFactory("BoxV2")
-	const box = await upgrades.upgradeProxy(BOX_ADDRESS, BoxV2)
-	console.log("Box upgraded!")
+	const proxyAddress = "0x4FE57a50Ee1A6079eD0e45123318127F3ca5Bd2a"
+	const contract = await ethers.getContractFactory("MyTokenV2")
+	console.log("Upgrading contract...")
+	const upgr = await upgrades.upgradeProxy(proxyAddress, contract)
+	await upgr.deployed()
+	console.log("Contract upgraded @ ", upgr.address)
 
+	const contractImplementation = await getImplementationAddress(upgr.address)
 	console.log("++++++++++++++++++++++++++++++++++++++++++++++++")
-	console.log("Contract upgraded:", box.address)
+	console.log("Contract Implementation:", contractImplementation)
 	console.log("++++++++++++++++++++++++++++++++++++++++++++++++")
+
+	//testing the upgrade
+	const myContract = await hre.ethers.getContractAt("MyTokenV2", proxyAddress)
+	let _testFunction = Number(await myContract.myFunction2())
+	console.log("_testFunction v2 :>> ", _testFunction)
+
+	await sleep(20000)
+	await hre.run("verify:verify", {
+		address: contractImplementation,
+		constructorArguments: [],
+	})
 }
 
 main()

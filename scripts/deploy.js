@@ -8,6 +8,14 @@ function sleep(ms) {
 	})
 }
 
+async function getImplementationAddress(proxyAddress) {
+	const implHex = await ethers.provider.getStorageAt(
+		proxyAddress,
+		"0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc"
+	)
+	return ethers.utils.hexStripZeros(implHex)
+}
+
 async function main() {
 	fs.removeSync("cache")
 	fs.removeSync("artifacts")
@@ -29,30 +37,42 @@ async function main() {
 	)
 
 	// We get the contract to deploy
-	const NFTContract = await ethers.getContractFactory("Box")
+	const MyTokenV1 = await ethers.getContractFactory("MyTokenV1")
 	console.log("Deploying Contract...")
-	const deployed = await upgrades.deployProxy(NFTContract)
+	const instanceContract = await upgrades.deployProxy(MyTokenV1, {
+		kind: "uups",
+		log: true,
+		skipIfAlreadyDeployed: true,
+	})
+	await instanceContract.deployed()
 
-	let dep = await deployed.deployed()
 	console.log("++++++++++++++++++++++++++++++++++++++++++++++++")
-	console.log("Contract deployed to:", dep.address)
+	console.log("Contract Proxy:", instanceContract.address)
 	console.log("++++++++++++++++++++++++++++++++++++++++++++++++")
 
-	await sleep(60000)
+	const contractImplementation = await getImplementationAddress(instanceContract.address)
+	console.log("++++++++++++++++++++++++++++++++++++++++++++++++")
+	console.log("Contract Implementation:", contractImplementation)
+	console.log("++++++++++++++++++++++++++++++++++++++++++++++++")
+
+	const myContract = await hre.ethers.getContractAt("MyTokenV1", instanceContract.address)
+	let _testFunction = Number(await myContract.myFunction1())
+	console.log("_testFunction v1 :>> ", _testFunction)
+
+	await sleep(20000)
 	await hre.run("verify:verify", {
-		address: dep.address,
+		address: contractImplementation,
 		constructorArguments: [],
 	})
 
-	if (network === "rinkeby") {
-		await dep.setProxyRegistry("0xf57b2c51ded3a29e6891aba85459d600256cf317")
-		console.log("opensea proxy set.")
-	} else if (network === "mainnet") {
-		await dep.setProxyRegistry("0xa5409ec958c83c3f309868babaca7c86dcb077c1")
-		console.log("opensea proxy set.")
-	} else {
-		console.log("opensea proxy cannot be set.")
-	}
+	// NFT PROJECT ? need to set OpenSea gasless approvals ?
+	// if (network === "rinkeby") {
+	// 	await dep.setProxyRegistry("0xf57b2c51ded3a29e6891aba85459d600256cf317")
+	// 	console.log("opensea proxy set.")
+	// } else if (network === "mainnet") {
+	// 	await dep.setProxyRegistry("0xa5409ec958c83c3f309868babaca7c86dcb077c1")
+	// 	console.log("opensea proxy set.")
+	// }
 }
 
 main()

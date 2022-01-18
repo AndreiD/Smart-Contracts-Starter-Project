@@ -17,7 +17,7 @@
 		"deploy:mainnet": "NETWORK=mainnet npx hardhat run --network mainnet scripts/deploy.js",
 		"deploy:polygon": "NETWORK=polygon npx hardhat run --network polygon scripts/deploy.js",
 		"deploy:polygon_test": "NETWORK=polygon_test npx hardhat run --network polygon_test scripts/deploy.js",
-		"gen_merkle": "npx hardhat run --network polygon_test scripts/gen_merkle.js",
+		"gen_merkle": "npx hardhat run --network polygon_test whitelist/gen_merkle.js",
 		"tools:surya:graph": "surya graph ./contracts/**/*.sol | dot -Tpng > build/TokenVesting.png",
 		"tools:surya:report": "surya mdreport build/docs/surya-report.md contracts/TokenVesting.sol",
 		"coverage": "npx hardhat coverage --solcoverjs ./.solcover.js"
