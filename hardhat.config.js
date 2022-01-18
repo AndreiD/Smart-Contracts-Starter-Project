@@ -5,6 +5,7 @@ require("@nomiclabs/hardhat-web3")
 require("@nomiclabs/hardhat-etherscan")
 require("hardhat-tracer")
 require("@openzeppelin/hardhat-upgrades")
+require("hardhat-docgen")
 require("solidity-coverage")
 
 module.exports = {
@@ -94,6 +95,11 @@ module.exports = {
 		gasPrice: 100,
 		showTimeSpent: true,
 		coinmarketcap: process.env.COINMARKETCAP_API,
+	},
+	docgen: {
+		path: "./docs",
+		clear: true,
+		runOnCompile: true,
 	},
 	mocha: {
 		timeout: 25000,
